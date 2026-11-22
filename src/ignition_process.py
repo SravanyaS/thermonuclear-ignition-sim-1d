@@ -11,8 +11,8 @@ def _validate_1d_state_array(arr: np.ndarray, name: str, expected_len: int | Non
         raise TypeError(f"State array '{name}' must be a valid numpy.ndarray, got {type(arr).__name__}.")
     if arr.ndim != 1:
         raise ValueError(f"State array '{name}' must be 1D, got shape {arr.shape}.")
-    if expected_len is not None and arr.shape != expected_len:
-        raise ValueError(f"State array '{name}' length ({arr.shape}) does not match grid nx ({expected_len}).")
+    if expected_len is not None and arr.size != expected_len:
+        raise ValueError(f"State array '{name}' length ({arr.size}) does not match grid nx ({expected_len}).")
     if not np.all(np.isfinite(arr)):
         raise ValueError(f"State array '{name}' contains NaN or Inf values.")
 
@@ -43,7 +43,7 @@ class ArrheniusReaction(ReactionStrategy):
     def compute_rate(self, temperature: np.ndarray, fuel_fraction: np.ndarray) -> np.ndarray:
         """Evaluates local nuclear burning rates where surface temperature exceeds ignition_threshold."""
         _validate_1d_state_array(temperature, "temperature")
-        _validate_1d_state_array(fuel_fraction, "fuel_fraction", expected_len=temperature.shape)
+        _validate_1d_state_array(fuel_fraction, "fuel_fraction", expected_len=temperature.size)
 
         rate = np.zeros_like(temperature, dtype=np.float64)
         ignited = temperature > self.ignition_threshold
@@ -127,7 +127,7 @@ class NeumannZeroFluxBoundary(BoundaryConditionStrategy):
     def apply(self, field: np.ndarray) -> None:
         """Copies interior adjacent node values onto both boundary endpoints in-place."""
         _validate_1d_state_array(field, "field")
-        if field.shape < 3:
+        if field.size < 3:
             raise ValueError("Field must contain at least 3 grid nodes to apply boundary conditions.")
         field = field
         field[-1] = field[-2]
