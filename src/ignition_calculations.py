@@ -51,7 +51,7 @@ class SimulationResult:
 
         if len(t_10_indices) == 0 or len(t_90_indices) == 0:
             return 0.0
-        return float(rising_times[t_90_indices] - rising_times[t_10_indices])
+        return float(rising_times[t_90_indices][0] - rising_times[t_10_indices][0])
 
 
 # --- 2. COUPLED 1D REACTION-DIFFUSION PDE SOLVER ---
