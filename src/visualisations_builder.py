@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 from src.ignition_calculations import SimulationResult
 
 
-# --- PUBLICATION-GRADE DIAGNOSTIC VISUALIZATION MODULE ---
+# --- SIMULATION VISUALIZATION MODULE ---
 
-# Generates space-time flame heatmaps and comparative X-ray light curves for Altamirano et al. (2022)
+# Plots space-time flame heatmaps and comparative X-ray light curves from simulation data
 class BurstVisualizer:
     """Generates multi-panel diagnostic plots comparing equatorial and high-latitude ignition runs."""
 
@@ -13,7 +13,7 @@ class BurstVisualizer:
     def plot_equator_vs_high_latitude(
         equator_res: SimulationResult,
         high_lat_res: SimulationResult,
-        output_path: str = "outputs/altamirano_2022_comparison.png",
+        output_path: str = "outputs/equator_vs_high_latitude_comparison.png",
     ) -> None:
         """
         Produces a 3-panel figure:
@@ -67,14 +67,14 @@ class BurstVisualizer:
 
         ax2.plot(
             equator_res.times_s,
-            equator_res.light_curve_norm,
+            equator_res.xray_flux_norm,
             color="#d62728",
             linewidth=2.2,
             label=f"Equator ($5^\\circ$): $t_{{10\\to 90}} = {eq_rise:.2f}\\,\\mathrm{{s}}$",
         )
         ax2.plot(
             high_lat_res.times_s,
-            high_lat_res.light_curve_norm,
+            high_lat_res.xray_flux_norm,
             color="#1f77b4",
             linewidth=2.2,
             linestyle="--",
@@ -83,7 +83,7 @@ class BurstVisualizer:
 
         ax2.axhline(0.10, color="gray", linestyle=":", linewidth=0.9, alpha=0.7)
         ax2.axhline(0.90, color="gray", linestyle=":", linewidth=0.9, alpha=0.7)
-        ax2.set_title("Synthetic NICER X-Ray Light Curves\n(cf. Bult, Altamirano et al. 2022)")
+        ax2.set_title("Normalized X-Ray Light Curves\n(Equator vs. High-Latitude Ignition)")
         ax2.set_xlabel("Time $t$ (s)")
         ax2.set_ylabel("Normalized X-Ray Flux ($F / F_{\\mathrm{peak}}$)")
         ax2.legend(loc="upper right", frameon=True)
@@ -92,3 +92,4 @@ class BurstVisualizer:
         plt.tight_layout()
         plt.savefig(output_path, dpi=250)
         plt.show()
+

@@ -3,8 +3,7 @@ import numpy as np
 from src.config import BurstPhysicsConfig, NeutronStarGridConfig
 
 
-# --- DEFENSIVE ARRAY VALIDATION HELPER ---
-
+# Defining array validation helpers
 def _validate_1d_state_array(arr: np.ndarray, name: str, expected_len: int | None = None) -> None:
     """Ensures a 1D simulation state array is non-null, finite, and matches grid dimensions."""
     if arr is None or not isinstance(arr, np.ndarray):
@@ -17,11 +16,11 @@ def _validate_1d_state_array(arr: np.ndarray, name: str, expected_len: int | Non
         raise ValueError(f"State array '{name}' contains NaN or Inf values.")
 
 
-# --- 1. THERMONUCLEAR REACTION KINETICS STRATEGIES ---
+# --- 1. THERMONUCLEAR REACTION KINETICS MODELS ---
 
 # Defines the abstract contract for swappable nuclear burning rate models
-class ReactionStrategy(ABC):
-    """Defines the contract for thermonuclear reaction rate models R(T, Y)."""
+class ReactionModel(ABC):
+    """Base interface for thermonuclear burning rate models"""
 
     @abstractmethod
     def compute_rate(self, temperature: np.ndarray, fuel_fraction: np.ndarray) -> np.ndarray:
@@ -30,7 +29,7 @@ class ReactionStrategy(ABC):
 
 
 # Models one-step exothermic Arrhenius nuclear fusion above a critical ignition temperature
-class ArrheniusReaction(ReactionStrategy):
+class ArrheniusReaction(ReactionModel):
     """Computes one-step Arrhenius fusion kinetics R(T, Y) = A * Y * exp(-T_act / T) for T > T_ign."""
 
     def __init__(self, physics: BurstPhysicsConfig):
@@ -57,9 +56,9 @@ class ArrheniusReaction(ReactionStrategy):
 
 # --- 2. LATERAL THERMAL TRANSPORT & CORIOLIS CONFINEMENT STRATEGIES ---
 
-# Defines the abstract contract for lateral heat diffusivity profiles across stellar latitudes
-class DiffusivityStrategy(ABC):
-    """Defines the contract for effective lateral thermal diffusivity D_eff(x) across latitudes."""
+# Base interface for lateral heat diffusivity profiles across stellar latitudes
+class DiffusivityModel(ABC):
+    """Defines effective lateral thermal diffusivity D_eff(x) across latitudes."""
 
     @abstractmethod
     def compute_diffusivity_profile(
@@ -72,7 +71,7 @@ class DiffusivityStrategy(ABC):
 
 
 # Models a non-rotating neutron star with uniform lateral heat conduction at all latitudes
-class UniformDiffusivity(DiffusivityStrategy):
+class UniformDiffusivity(DiffusivityModel):
     """Provides constant baseline diffusivity D_0 across all latitudes for non-rotating control runs."""
 
     def compute_diffusivity_profile(
@@ -90,7 +89,7 @@ class UniformDiffusivity(DiffusivityStrategy):
 
 
 # Models Spitkovsky et al. (2002) rotational confinement where Coriolis drag slows high-latitude flames
-class LatitudeCoriolisDrag(DiffusivityStrategy):
+class LatitudeCoriolisDrag(DiffusivityModel):
     """Computes latitude-dependent diffusivity D_eff(theta) = D_0 / (1 + alpha * sin(theta))."""
 
     def compute_diffusivity_profile(
@@ -110,9 +109,9 @@ class LatitudeCoriolisDrag(DiffusivityStrategy):
 
 # --- 3. SPATIAL BOUNDARY CONDITION STRATEGIES ---
 
-# Defines the abstract contract for enforcing physical boundary conditions at grid endpoints
-class BoundaryConditionStrategy(ABC):
-    """Defines the contract for enforcing boundary conditions at equator (x=0) and pole (x=L)."""
+# Base interface for enforcing physical boundary conditions at grid endpoints
+class BoundaryCondition(ABC):
+    """Defines the required boundary conditions at the equator (x=0) and pole (x=L)."""
 
     @abstractmethod
     def apply(self, field: np.ndarray) -> None:
@@ -121,7 +120,7 @@ class BoundaryConditionStrategy(ABC):
 
 
 # Enforces insulated zero-flux boundaries representing equatorial symmetry and polar convergence
-class NeumannZeroFluxBoundary(BoundaryConditionStrategy):
+class NeumannZeroFluxBoundary(BoundaryCondition):
     """Enforces zero spatial gradient (dT/dx = 0) at equator (x=0) and pole (x=L) to prevent heat loss."""
 
     def apply(self, field: np.ndarray) -> None:

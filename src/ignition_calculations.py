@@ -7,24 +7,24 @@ from src.config import (
 )
 from src.ignition_process import (
     ArrheniusReaction,
-    BoundaryConditionStrategy,
-    DiffusivityStrategy,
+    BoundaryCondition,
+    DiffusivityModel,
     LatitudeCoriolisDrag,
     NeumannZeroFluxBoundary,
-    ReactionStrategy,
+    ReactionModel,
 )
 
 
 # --- 1. SIMULATION TELEMETRY & OBSERVATIONAL RESULT CONTAINER ---
 
-# Stores time-series X-ray light curves, spatial snapshots, and rise-time diagnostics
+# Stores the numerical simulation data needed to plot X-ray light curves and compute rise times from the simulation model
 @dataclass
 class SimulationResult:
-    """Stores synthetic X-ray telescope telemetry and 1D space-time flame evolution."""
+    """Stores surface temperature snapshots, fuel consumption, and X-ray brightness data over time."""
     x_km: np.ndarray                 # Meridional grid coordinates from equator to pole (km)
     times_s: np.ndarray              # Time stamps for every integration step (s)
-    light_curve_raw: np.ndarray      # Unnormalized bolometric X-ray flux F(t) ~ sum(T^4 - T0^4) dx
-    light_curve_norm: np.ndarray     # Normalized X-ray flux F(t) / F_peak in [0, 1]
+    xray_flux_raw: np.ndarray      # Unnormalized bolometric X-ray flux F(t) ~ sum(T^4 - T0^4) dx
+    xray_flux_norm: np.ndarray     # Normalized X-ray flux F(t) / F_peak in [0, 1]
     burned_fraction: np.ndarray      # Fraction of total surface fuel consumed over time
     snapshot_times_s: np.ndarray     # Time stamps of saved spatial profiles (s)
     T_history: np.ndarray            # 2D array (n_snapshots, nx) of temperature evolution
@@ -33,7 +33,7 @@ class SimulationResult:
     @property
     def peak_time_s(self) -> float:
         """Returns the time (s) at which the synthetic X-ray light curve reaches maximum flux."""
-        peak_idx = int(np.argmax(self.light_curve_norm))
+        peak_idx = int(np.argmax(self.xray_flux_norm))
         return float(self.times_s[peak_idx])
 
     @property
@@ -42,8 +42,8 @@ class SimulationResult:
         Computes standard observational X-ray burst rise time (t_90 - t_10 in seconds):
         time elapsed for normalized flux to climb from 10% to 90% of peak brightness.
         """
-        peak_idx = int(np.argmax(self.light_curve_norm))
-        rising_flux = self.light_curve_norm[: peak_idx + 1]
+        peak_idx = int(np.argmax(self.xray_flux_norm))
+        rising_flux = self.xray_flux_norm[: peak_idx + 1]
         rising_times = self.times_s[: peak_idx + 1]
 
         t_10_indices = np.where(rising_flux >= 0.10)[0]
@@ -67,9 +67,9 @@ class ThermonuclearFlameSolver1D:
         self,
         grid: NeutronStarGridConfig,
         physics: BurstPhysicsConfig,
-        reaction: ReactionStrategy | None = None,
-        diffusivity: DiffusivityStrategy | None = None,
-        boundary: BoundaryConditionStrategy | None = None,
+        reaction: ReactionModel | None = None,
+        diffusivity: DiffusivityModel | None = None,
+        boundary: BoundaryCondition | None = None,
     ):
         if grid is None or not isinstance(grid, NeutronStarGridConfig):
             raise TypeError("Parameter 'grid' must be a valid NeutronStarGridConfig instance.")
@@ -119,7 +119,7 @@ class ThermonuclearFlameSolver1D:
         snapshot_interval = max(1, n_steps // num_snapshots)
 
         times = np.zeros(n_steps, dtype=np.float64)
-        light_curve_raw = np.zeros(n_steps, dtype=np.float64)
+        xray_flux_raw = np.zeros(n_steps, dtype=np.float64)
         burned_fraction = np.zeros(n_steps, dtype=np.float64)
 
         T_snapshots = []
@@ -135,7 +135,7 @@ class ThermonuclearFlameSolver1D:
 
             # Integrate excess blackbody X-ray flux across the surface (Stefan-Boltzmann F ~ T^4)
             excess_flux = np.sum(np.maximum(0.0, self.T ** 4 - T0_fourth)) * self.dx
-            light_curve_raw[step] = excess_flux
+            xray_flux_raw[step] = excess_flux
             burned_fraction[step] = 1.0 - (float(np.sum(self.Y)) / initial_total_fuel)
 
             if step % snapshot_interval == 0:
@@ -163,14 +163,14 @@ class ThermonuclearFlameSolver1D:
             self.boundary.apply(self.Y)
 
         # Normalize light curve to peak = 1.0 for direct observational rise-time comparison
-        peak_flux = float(np.max(light_curve_raw))
-        light_curve_norm = light_curve_raw / peak_flux if peak_flux > 0.0 else light_curve_raw.copy()
+        peak_flux = float(np.max(xray_flux_raw))
+        xray_flux_norm = xray_flux_raw / peak_flux if peak_flux > 0.0 else xray_flux_raw.copy()
 
         return SimulationResult(
             x_km=self.x,
             times_s=times,
-            light_curve_raw=light_curve_raw,
-            light_curve_norm=light_curve_norm,
+            xray_flux_raw=xray_flux_raw,
+            xray_flux_norm=xray_flux_norm,
             burned_fraction=burned_fraction,
             snapshot_times_s=np.array(snapshot_times, dtype=np.float64),
             T_history=np.array(T_snapshots, dtype=np.float64),
