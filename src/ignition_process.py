@@ -128,5 +128,5 @@ class NeumannZeroFluxBoundary(BoundaryCondition):
         _validate_1d_state_array(field, "field")
         if field.size < 3:
             raise ValueError("Field must contain at least 3 grid nodes to apply boundary conditions.")
-        field = field
+        field.__setitem__(0, field.item(1))
         field[-1] = field[-2]

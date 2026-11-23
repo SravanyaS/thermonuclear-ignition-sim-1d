@@ -14,7 +14,9 @@ def run_altamirano_comparison_experiment() -> None:
     grid = NeutronStarGridConfig(star_radius_km=10.0, nx=250, total_time_s=8.0, dt=0.0005)
 
     # Scenario A: Low-accretion equatorial ignition (weak Coriolis drag -> fast burst rise)
-    equator_physics = BurstPhysicsConfig(ignition_latitude_deg=5.0, polar_coriolis_drag=2.8)
+    equator_physics = BurstPhysicsConfig(ignition_latitude_deg=15.0,
+                                         ignition_width_km=1.2,
+                                         polar_coriolis_drag=2.5)
     equator_solver = ThermonuclearFlameSolver1D(
         grid=grid,
         physics=equator_physics,
@@ -25,7 +27,9 @@ def run_altamirano_comparison_experiment() -> None:
     equator_result = equator_solver.run(num_snapshots=100)
 
     # Scenario B: High-accretion high-latitude ignition (strong Coriolis drag -> slow burst rise)
-    high_lat_physics = BurstPhysicsConfig(ignition_latitude_deg=65.0, polar_coriolis_drag=2.8)
+    high_lat_physics = BurstPhysicsConfig(ignition_latitude_deg=75.0,
+                                          ignition_width_km=1.2,
+                                          polar_coriolis_drag=2.5, )
     high_lat_solver = ThermonuclearFlameSolver1D(
         grid=grid,
         physics=high_lat_physics,
@@ -37,9 +41,9 @@ def run_altamirano_comparison_experiment() -> None:
 
     print("=== 1D Thermonuclear Flame Simulation Summary (cf. Altamirano et al. 2022) ===")
     print(f"CFL Stability Number         : {equator_solver.cfl_number:.4f} (limit <= 0.5000)")
-    print(f"Equatorial Burst (5 deg)     : Peak at t = {equator_result.peak_time_s:.2f} s | "
+    print(f"Equatorial Burst (15 deg)    : Peak at t = {equator_result.peak_time_s:.2f} s | "
           f"Rise t_10->90 = {equator_result.rise_time_10_90_s:.2f} s")
-    print(f"High-Latitude Burst (65 deg) : Peak at t = {high_lat_result.peak_time_s:.2f} s | "
+    print(f"High-Latitude Burst (75 deg) : Peak at t = {high_lat_result.peak_time_s:.2f} s | "
           f"Rise t_10->90 = {high_lat_result.rise_time_10_90_s:.2f} s")
 
     BurstVisualizer.plot_equator_vs_high_latitude(
