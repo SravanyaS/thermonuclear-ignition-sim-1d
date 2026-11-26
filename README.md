@@ -20,6 +20,15 @@ Run the Streamlit web application to explore how ignition latitude (\(0^\circ\)â
 ```bash
 streamlit run app.py
 ```
+## Interactive Dashboard Preview
+
+> **[Launch Live Dashboard on Streamlit Cloud](https://thermonuclear-ignition-sim-1d-dtzn3y2hergdr3ncuk6ozv.streamlit.app/)** *(or simply run locally with `streamlit run app.py`)*
+
+| Interactive Simulation & Parameter Explorer | Live NASA HEASARC MINBAR Comparison |
+| :---: | :---: |
+| ![Interactive Simulation Tab](outputs/dashboard_simulation_preview.png) | ![Live NASA HEASARC Tab](outputs/dashboard_heasarc_preview.png) |
+
+
 
 ### 3. Run the Equator (\(15^\circ\)) vs. High-Latitude (\(75^\circ\)) Benchmark
 Execute the standalone comparison experiment to print rise-time diagnostics and generate the multi-panel diagnostic figure in `outputs/equator_vs_high_latitude_comparison.png`:
