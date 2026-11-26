@@ -8,15 +8,17 @@ from src.ignition_process import (
 from src.visualisations_builder import BurstVisualizer
 
 
-# Executes the Bult, Altamirano et al. (2022) equator vs. high-latitude ignition experiment
-def run_altamirano_comparison_experiment() -> None:
-    """Runs equatorial (5 deg) and high-latitude (65 deg) burst simulations and compares rise times."""
+# Executes the equatorial vs. high-latitude ignition experiment
+def run_latitude_comparison_experiment() -> None:
+    """Runs equatorial (15 deg) and high-latitude (75 deg) burst simulations and compares rise times."""
     grid = NeutronStarGridConfig(star_radius_km=10.0, nx=250, total_time_s=8.0, dt=0.0005)
 
     # Scenario A: Low-accretion equatorial ignition (weak Coriolis drag -> fast burst rise)
-    equator_physics = BurstPhysicsConfig(ignition_latitude_deg=15.0,
-                                         ignition_width_km=1.2,
-                                         polar_coriolis_drag=2.5)
+    equator_physics = BurstPhysicsConfig(
+        ignition_latitude_deg=15.0,
+        ignition_width_km=1.2,
+        polar_coriolis_drag=2.5,
+    )
     equator_solver = ThermonuclearFlameSolver1D(
         grid=grid,
         physics=equator_physics,
@@ -27,9 +29,11 @@ def run_altamirano_comparison_experiment() -> None:
     equator_result = equator_solver.run(num_snapshots=100)
 
     # Scenario B: High-accretion high-latitude ignition (strong Coriolis drag -> slow burst rise)
-    high_lat_physics = BurstPhysicsConfig(ignition_latitude_deg=75.0,
-                                          ignition_width_km=1.2,
-                                          polar_coriolis_drag=2.5, )
+    high_lat_physics = BurstPhysicsConfig(
+        ignition_latitude_deg=75.0,
+        ignition_width_km=1.2,
+        polar_coriolis_drag=2.5,
+    )
     high_lat_solver = ThermonuclearFlameSolver1D(
         grid=grid,
         physics=high_lat_physics,
@@ -39,19 +43,23 @@ def run_altamirano_comparison_experiment() -> None:
     )
     high_lat_result = high_lat_solver.run(num_snapshots=100)
 
-    print("=== 1D Thermonuclear Flame Simulation Summary (cf. Altamirano et al. 2022) ===")
+    print("=== 1D Thermonuclear Flame Simulation Summary (Equator vs. High Latitude) ===")
     print(f"CFL Stability Number         : {equator_solver.cfl_number:.4f} (limit <= 0.5000)")
-    print(f"Equatorial Burst (15 deg)    : Peak at t = {equator_result.peak_time_s:.2f} s | "
-          f"Rise t_10->90 = {equator_result.rise_time_10_90_s:.2f} s")
-    print(f"High-Latitude Burst (75 deg) : Peak at t = {high_lat_result.peak_time_s:.2f} s | "
-          f"Rise t_10->90 = {high_lat_result.rise_time_10_90_s:.2f} s")
+    print(
+        f"Equatorial Burst (15 deg)    : Peak at t = {equator_result.peak_time_s:.2f} s | "
+        f"Rise t_10->90 = {equator_result.rise_time_10_90_s:.2f} s"
+    )
+    print(
+        f"High-Latitude Burst (75 deg) : Peak at t = {high_lat_result.peak_time_s:.2f} s | "
+        f"Rise t_10->90 = {high_lat_result.rise_time_10_90_s:.2f} s"
+    )
 
     BurstVisualizer.plot_equator_vs_high_latitude(
         equator_res=equator_result,
         high_lat_res=high_lat_result,
-        output_path="outputs/altamirano_2022_comparison.png",
+        output_path="outputs/equator_vs_high_latitude_comparison.png",
     )
 
 
 if __name__ == "__main__":
-    run_altamirano_comparison_experiment()
+    run_latitude_comparison_experiment()
