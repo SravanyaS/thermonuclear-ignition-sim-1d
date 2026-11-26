@@ -20,7 +20,7 @@ Run the Streamlit web application to explore how ignition latitude (\(0^\circ\)â
 ```bash
 streamlit run app.py
 ```
-## Interactive Dashboard Preview
+#### Interactive Dashboard Preview
 
 > **[Launch Live Dashboard on Streamlit Cloud](https://thermonuclear-ignition-sim-1d-dtzn3y2hergdr3ncuk6ozv.streamlit.app/)** *(or simply run locally with `streamlit run app.py`)*
 
@@ -30,7 +30,7 @@ streamlit run app.py
 
 
 
-### 3. Run the Equator (\(15^\circ\)) vs. High-Latitude (\(75^\circ\)) Benchmark
+### 3. Run the Equator vs. High-Latitude comparison graph
 Execute the standalone comparison experiment to print rise-time diagnostics and generate the multi-panel diagnostic figure in `outputs/equator_vs_high_latitude_comparison.png`:
 ```bash
 python main.py
